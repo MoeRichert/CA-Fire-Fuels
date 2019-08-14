@@ -253,13 +253,6 @@ function drawcounties(geojdata, expattr, colorSc, map, path){
             .style("stroke-opacity", 0);
 };
 
-//function opac(prop, expattr);
-//        if prop[expattr] = 0 {
-//            return 0
-//        } else {
-//            return 0.75
-//        }
-
 // draw block groups outline
 function drawblockG(geoj, map, path, fieldName){
     
@@ -283,7 +276,7 @@ function drawblockG(geoj, map, path, fieldName){
                         }
                     });
                 highlight(d.properties, "GEOID");
-                setLabel(d.properties, fieldName);
+                setLabel(d.properties,"GEOID");
             })
             .on("mouseout", function(d){
                 highlight(d.properties, "GEOID");
@@ -292,13 +285,24 @@ function drawblockG(geoj, map, path, fieldName){
             .on("mousemove", moveLabel);
 };	
 
+function updateDrawFeatures(dataTable, expressed, colorScale){
+        let updateBlockGroups = d3.selectAll(".blockGroups")
+            .transition()
+            .duration(2000)
+            .style("fill", function(d){
+                return choropleth(d.properties[expressed], colorScale)
+            })
+            .style("fill-opacity", 0.75)
+            .style("stroke-opacity", 0);
+    }
+
 // highlight on mouseover
-function highlight(props, fieldName){
-    
+    function highlight(props, fieldName){
         //change stroke
         let selected = d3.selectAll(".bg"+props[fieldName]);
         selected.classed("highlight", !selected.classed("highlight"));
-};
+    };
+
 
    // tooltips
     function setLabel(props, fieldName){
@@ -356,39 +360,6 @@ function highlight(props, fieldName){
 
 
 
-// mouse movements
-function moveLabel(){
-        // label width
-        let labelWidth = d3.select(".infoLabel")
-            .node()
-            .getBoundingClientRect()
-            .width;
-
-        // mouse coords
-        let x1 = d3.event.clientX +10;
-        let y1 = d3.event.clientY -75;
-        let x2 = d3.event.clientX - labelWidth -10;
-        let y2 = d3.event.clientY +25;
-
-        let x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2: x1;
-        let y = d3.event.clientY < 150 ? y2 : y1;
-
-        d3.select(".infoLabel")
-            .style("left", x + "px")
-            .style("top", y + "px");
-    };
-
-function updateDrawFeatures(dataTable, expressed, colorScale){
-        let updateBlockGroups = d3.selectAll(".blockGroups")
-            .transition()
-            .duration(2000)
-            .style("fill", function(d){
-                return choropleth(d.properties[expressed], colorScale)
-            })
-            .style("fill-opacity", 0.75)
-            .style("stroke-opacity", 0);
-    }
-
 //big block pf charts
 function setChart(csvData, colorScale, expressed, attrArray){
     //chart frame dimensions
@@ -444,7 +415,10 @@ function setChart(csvData, colorScale, expressed, attrArray){
         })
         .attr("width", chartInnerWidth / csvData.length - 1)
         .on("mouseover", function(d){
-            highlight(d, "GEOID") } )              
+            highlight(d, "GEOID") 
+            //setLabel(d, "GEOID")
+        } )
+        .on("mousemove", moveLabel)
             .on("mouseout", function(d){
                 highlight(d, "GEOID");
                 d3.selectAll(".infoLabel").remove();
@@ -565,6 +539,11 @@ function updateChart(bars, n, colorScale, csvData, expressed, attrArray){
     //create vertical axis generator
     var yAxis = d3.axisLeft()
         .scale(yScale);
+    
+    // update axis
+            d3.selectAll(".axis")
+                .attr("transform", "translate("+leftPadding+","+topBottomPadding/2+")")
+                .call(yAxis);
 
     
 
@@ -616,5 +595,3 @@ function chartitle (expressed){
                 }
     }}}}}};
         
-    
-    
